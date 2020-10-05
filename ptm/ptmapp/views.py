@@ -26,29 +26,23 @@ class TaskView(ListAPIView):
     serializer_class = TaskSerializer
     filter_backends = [DjangoFilterBackend]
     filter_class = TaskFilter
-    # filterset_fields = ['id', 'status', 'completion_date']
 
     def get_queryset(self):
         token_obj = Token.objects.get(key=self.request.auth)
         queryset = Task.objects.filter(user_id=token_obj.user_id)
-        # if not queryset:
-            # return Response({"detail": "Task list is empty."})
         return queryset
-
-    # def get(self, request, *args, **kwargs):
-    #     return self.list(request, *args, **kwargs)
-
-    # def get(self, request):
-    #     tasks = Task.objects.all()
-    #     serializer = TaskSerializer(tasks, many=True)
-    #     return Response({"tasks": serializer.data})
 
     def post(self, request):
         token_obj = Token.objects.get(key=self.request.auth)
-        task = request.data.get('task')
+        if not request.data.get('task'):
+            return Response({"detail": "Object key 'task' expected"})
+        task = request.data['task']
         task['user'] = token_obj.user_id
         serializer = TaskSerializer(data=task)
         if serializer.is_valid(raise_exception=True):
+            if task.get('completion_date') is not None:
+                if parser.parse(task['completion_date'], ignoretz=True) <= datetime.now():
+                    return Response({"detail": "Incorrect completion_date"})
             task_saved = serializer.save()
         return Response({"success": "Task '{}' created successfully".format(task_saved.task_name)}, status=201)
 
@@ -61,7 +55,6 @@ class TaskUpdate(ListAPIView):
         if 'pk' in self.kwargs:
             queryset = Task.objects.filter(Q(user_id=token_obj.user_id) & Q(id=self.kwargs['pk']))
             return queryset
-
 
     def put(self, request, pk):
         token_obj = Token.objects.get(key=self.request.auth)
@@ -80,7 +73,7 @@ class TaskUpdate(ListAPIView):
             if data.get('completion_date') is not None:
                 if parser.parse(data['completion_date'], ignoretz=True) <= datetime.now():
                     return Response({"detail": "Incorrect completion_date"})
-                date_saved = saved_task.completion_date.isoformat()  #parser.parse(saved_task.completion_date)
+                date_saved = saved_task.completion_date.isoformat()
                 date_request = parser.parse(data['completion_date']).isoformat()
                 if date_saved != date_request:
                     changed_fields += 'completion_date'
@@ -114,23 +107,11 @@ class UserRegisterView(ObtainAuthToken):
 
 class TaskChangeHistoryVeiw(ListAPIView):
     serializer_class = TaskChangeHistorySerializer
+
     def get_queryset(self):
         token_obj = Token.objects.get(key=self.request.auth)
         if 'pk' in self.kwargs:
             queryset = TaskChangeHistory.objects.filter(Q(user_id=token_obj.user_id) & Q(task_id=self.kwargs['pk']))
             return queryset
-        else:
-            queryset = TaskChangeHistory.objects.filter(user_id=token_obj.user_id)
-            return queryset
-        # return Response({"detail": "Task not found"})
-
-
-# class ObtainAuthTokenView(ObtainAuthToken):
-#     def post(self, request):
-#         username = request.data.get('username')
-#         password = request.data.get('password')
-#         saved_user = get_object_or_404(User.objects.filter(username=username))
-#         if check_password(password, saved_user.password):
-#             token_obj, created = Token.objects.get_or_create(user=saved_user)
-#             return Response({'token': token_obj.key})
-#         return Response({'error': ""})
+        queryset = TaskChangeHistory.objects.filter(user_id=token_obj.user_id)
+        return queryset

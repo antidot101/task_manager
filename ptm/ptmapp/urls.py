@@ -9,5 +9,5 @@ urlpatterns = [
     path('tasks/change-history/', TaskChangeHistoryVeiw.as_view()),
     path('tasks/change-history/<int:pk>', TaskChangeHistoryVeiw.as_view()),
     path('register/', UserRegisterView.as_view()),
-    path('token-auth/', views.obtain_auth_token) # ObtainAuthTokenView.as_view()
+    path('token-auth/', views.obtain_auth_token)
 ]
