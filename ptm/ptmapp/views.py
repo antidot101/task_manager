@@ -1,25 +1,24 @@
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
 from .models import Task, TaskChangeHistory
 from .serializers import TaskSerializer, TaskChangeHistorySerializer, UserRegisterSerializer
 from django.contrib.auth.models import User
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet
-import django_filters
+from django_filters.rest_framework import DjangoFilterBackend
+from .utils import TaskFilter
 from django.db.models import Q
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 import dateutil.parser as parser
 
 
-class TaskFilter(FilterSet):
-    min_date = django_filters.IsoDateTimeFilter(field_name="completion_date", lookup_expr="gte")
-    max_date = django_filters.IsoDateTimeFilter(field_name="completion_date", lookup_expr="lte")
+class WelcomeView(APIView):
+    permission_classes = ()
 
-    class Meta:
-        model = Task
-        fields = ['id', 'status', 'completion_date']
+    def get(self, request):
+        return Response({"welcome": "Welcome to your Personal Task Manager. To get started with PTM please read the README "
+                                    "https://github.com/antidot101/task_manager/blob/master/README.md"})
 
 
 class TaskView(ListAPIView):
@@ -66,9 +65,9 @@ class TaskUpdate(ListAPIView):
         if serializer.is_valid(raise_exception=True):
             # detecting changed fields
             for field in editable_fields:
-                print(getattr(saved_task, field))
-                if getattr(saved_task, field) != data.get(field):
-                    changed_fields += field + ", "
+                if data.get(field) is not None:
+                    if getattr(saved_task, field) != data.get(field):
+                        changed_fields += field + ", "
             # checking completion_date correctness
             if data.get('completion_date') is not None:
                 if parser.parse(data['completion_date'], ignoretz=True) <= datetime.now():
@@ -82,16 +81,19 @@ class TaskUpdate(ListAPIView):
                 changed_fields = "No fields changed"
 
             task_saved = serializer.save()
-            data['task'] = pk
-            data['user'] = token_obj.user_id
-            data['changed_fields'] = changed_fields
-            serializer2 = TaskChangeHistorySerializer(data=data, partial=True)
+            hist_data = task_saved.__dict__
+            hist_data['task'] = pk
+            hist_data['user'] = token_obj.user_id
+            hist_data['changed_fields'] = changed_fields
+            serializer2 = TaskChangeHistorySerializer(data=hist_data)
             if serializer2.is_valid(raise_exception=True):
                 serializer2.save()
         return Response({"success": "Task '{}' updated successfully".format(task_saved.task_name)})
 
 
-class UserRegisterView(ObtainAuthToken):
+class UserRegisterView(APIView):
+    permission_classes = ()
+
     def post(self, request):
         username = request.data.get('username')
         if User.objects.filter(username=username).exists():
