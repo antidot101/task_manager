@@ -17,7 +17,8 @@ class WelcomeView(APIView):
     permission_classes = ()
 
     def get(self, request):
-        return Response({"welcome": "Welcome to your Personal Task Manager. To get started with PTM please read the README "
+        return Response({"welcome": "Welcome to your Personal Task Manager. "
+                                    "To get started with PTM please read the README "
                                     "https://github.com/antidot101/task_manager/blob/master/README.md"})
 
 
@@ -98,13 +99,11 @@ class UserRegisterView(APIView):
         username = request.data.get('username')
         if User.objects.filter(username=username).exists():
             return Response({"detail": "User '{}' already exist".format(username)})
-        password = make_password(request.data.get('password'))
-        data = {}
-        data['username'], data['password'] = username, password
-        serializer = UserRegisterSerializer(data=data)
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            user_saved = serializer.save()
-        return Response({"success": "User '{}' created successfully".format(user_saved.username)}, status=201)
+            password = make_password(serializer.validated_data['password'])
+            User.objects.create_user(username=username, password=password)
+        return Response({"success": "User '{}' created successfully".format(username)}, status=201)
 
 
 class TaskChangeHistoryVeiw(ListAPIView):
