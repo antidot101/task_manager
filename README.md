@@ -70,26 +70,30 @@ JSON REST API выполнен с применением Django Rest Framework.
 * \* status – статус задачи, одно из значений (New, Planned, In progress, Completed)
 * completion_date (необязательное поле) – дата и время завершения задачи в формате iso8601
 
-Объект передается **с ключом «task»**.  
 Передаваемая дата завершения задачи не может быть раньше текущей.  
 Если дата завершения задачи не указывается, поле completion_date в запросе следует удалить.  
 
 **request body:**
 ```javascript
 {
-    "task":
-        {
-            "task_name": "Подготовка к аудиту",
-            "description": "Провести совещание с финансовым блоком и бухгалтерий",
-            "status": "Planned",
-            "completion_date": "2020-10-25T10:00:00.000001Z"
-        }
+     "task_name": "Подготовка к аудиту",
+     "description": "Провести совещание с финансовым блоком и бухгалтерий",
+     "status": "Planned",
+     "completion_date": "2020-10-25T10:00:00.000001Z"
 }
 ```
 **response:**  
 ```javascript
 {
-    "success": " Task 'Подготовка к аудиту' created successfully"
+    "success": " Task 'Подготовка к аудиту' created successfully",
+    "created_task": {
+            "id": 1,
+            "task_name": "Подготовка к аудиту",
+            "description": "Провести совещание с финансовым блоком и бухгалтерий",
+            "creation_date": "2020-10-07T22:12:41.903621Z",
+            "status": "Planned",
+            "completion_date": "2020-10-25T10:00:00.000001Z"
+    }
 }
 ```
 
@@ -100,7 +104,6 @@ JSON REST API выполнен с применением Django Rest Framework.
 
 **response:**
 ```javascript
-
 [
     {
         "id": 1,
@@ -157,31 +160,38 @@ JSON REST API выполнен с применением Django Rest Framework.
 * status – статус задачи, одно из значений (New, Planned, In progress, Completed)
 * completion_date – дата и время завершения задачи в формате iso8601
 
-Измененные значения полей передаются в объекте **с ключом «task»**.  
 Изменённая дата завершения задачи не может быть раньше текущей.  
 
 **request body:**
 - *изменить название, статус и описание:*  
 ```javascript
 {
-    "task":
-        {
-            "task_name": "Preparing presentation",
-            "description": "To collect materials from departments ...",
-            "status": "Completed"
-        }
+    "task_name": "Preparing presentation",
+    "description": "To collect materials from departments ...",
+    "status": "Completed"
 }
 ```
+или  
 - *изменить дату завершения:*  
 ```javascript
 {
-    "task":
-        {
-            "completion_date": "2020-12-25T20:00:00.000001Z"
-        }
+    "completion_date": "2020-12-25T20:00:00.000001Z"
 }
 ```
-
+**response:**  
+```javascript
+{
+    "success": " Task 'Preparing presentation' updated successfully",
+    "updated_task": {
+            "id": 3,
+            "task_name": "Preparing presentation",
+            "description": "To collect materials from departments ...",
+            "creation_date": "2020-10-07T22:12:41.903621Z",
+            "status": "Completed",
+            "completion_date": "2020-12-25T20:00:00.000001Z"
+    }
+}
+```
 ## **Просмотр истории изменений задачи**  
 
 **GET  /api/tasks/change-history/<task_id:int>**  
