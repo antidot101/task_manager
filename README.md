@@ -30,7 +30,7 @@ JSON REST API выполнен с применением Django Rest Framework.
 **Ответ:**
 ```javascript
 {  
-    "success": "User 'IIIII' created successfully"  
+    "success": "User 'FirstPTMUser' created successfully"  
 }
 ```
 ## **Авторизация**  
@@ -188,7 +188,7 @@ task_id - целочисленный идентификатор задачи.
 Список изменений отсортирован по дате изменения, начиная с последнего.  
 Помимо полей задачи в ответе присутствуют дополнительные поля:  
 * id – идентификатор изменения
-* changed_fields – наименования измененных полей
+* changed_fields – наименования измененных полей или No changes
 * change_date – дата и время изменения
 * task – идентификатор задачи
 
