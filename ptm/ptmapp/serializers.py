@@ -3,9 +3,17 @@ from .models import Task, TaskChangeHistory
 from django.contrib.auth.models import User
 from django.core import exceptions
 import django.contrib.auth.password_validation as validators
+from datetime import datetime
+import dateutil.parser as parser
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    def validate(self, data):
+        if data.get('completion_date') is not None:
+            if data['completion_date'].replace(tzinfo=None) <= datetime.now().replace(tzinfo=None):
+                raise serializers.ValidationError({"completion_date": "Datetime earlier than the current datetime"})
+        return super(TaskSerializer, self).validate(data)
+
     class Meta:
         model = Task
         fields = ('id', 'user', 'task_name', 'description', 'creation_date', 'status', 'completion_date')
