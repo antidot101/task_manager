@@ -96,7 +96,7 @@ class UserRegisterView(APIView):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             password = make_password(serializer.validated_data['password'])
-            User.objects.create_user(username=username, password=password)
+            serializer.save(password = password)
         return Response({"success": "User '{}' created successfully".format(username)}, status=201)
 
 
