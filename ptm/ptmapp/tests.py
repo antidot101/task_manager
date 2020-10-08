@@ -16,10 +16,13 @@ class UserTestCase(APITestCase):
     def test_create_user_success(self):
         response = self.register_user(data=self.user_correct)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(User.objects.count(), 1)
+        self.assertEqual(User.objects.get().username, 'Billy-Jean')
 
     def test_create_user_already_exist(self):
         self.register_user(data=self.user_correct)
         response = self.register_user(data=self.user_correct)
+        self.assertEqual(User.objects.count(), 1)
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_create_user_invalid(self):
@@ -29,6 +32,7 @@ class UserTestCase(APITestCase):
         self.assertEqual(response1.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response3.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(User.objects.count(), 0)
 
 
 class AuthTokenTestCase(APITestCase):
@@ -51,29 +55,22 @@ class AuthTokenTestCase(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
 
+class TaskTestCase(APITestCase):
+    registration_url = reverse('registration')
+    get_token_url = reverse('get_token')
+    tasks = reverse('tasks')
 
+    def setUp(self):
+        user = {'username': 'Billy-Jean', 'password': 'barbstraisand%@#'}
+        self.client.post(self.registration_url, data=user)
+        response = self.client.post(self.get_token_url, data=user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + response.data['token'])
 
-# class TaskTestCase(APITestCase):
-#     registration_url = reverse('registration')
-#     get_token_url = reverse('get_token')
-#     tasks = reverse('tasks')
-#
-#     def setUp(self):
-#         self.user = self.client.post(self.registration_url, data={'username':'Billy-Jean',
-#                                                                   'password':'barbstraisand%@#'})
-#         response = self.client.post(self.get_token_url, data={'username':'Billy-Jean',
-#                                                               'password':'barbstraisand%@#'})
-#         self.token = response.data['token']
-#         self.api_authentication()
-#
-#     def api_authentication(self):
-#         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
-#
-#     def test_tasks_list_authenticated(self):
-#         response = self.client.get(self.tasks)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#
-#     def test_tasks_list_unauthenticated(self):
-#         self.client.force_authenticate(user=None)
-#         response = self.client.get(self.tasks)
-#         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_tasks_list_authenticated(self):
+        response = self.client.get(self.tasks)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_tasks_list_unauthenticated(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(self.tasks)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
