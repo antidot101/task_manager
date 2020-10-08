@@ -92,7 +92,7 @@ class UserRegisterView(APIView):
     def post(self, request):
         username = request.data.get('username')
         if User.objects.filter(username=username).exists():
-            return Response({"detail": "User '{}' already exist".format(username)})
+            return Response({"detail": "User '{}' already exist".format(username)}, status=409)
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             password = make_password(serializer.validated_data['password'])
