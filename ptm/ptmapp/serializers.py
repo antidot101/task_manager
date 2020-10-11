@@ -16,10 +16,9 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = ('id', 'user', 'task_name', 'description', 'creation_date', 'status', 'completion_date')
+        fields = ('id', 'task_name', 'description', 'creation_date', 'status', 'completion_date')
         read_only_fields = ['id', 'creation_date']
-        extra_kwargs = {'completion_date': {'allow_null': True},
-                        'user': {'write_only': True}}
+        extra_kwargs = {'completion_date': {'allow_null': True}}
 
 
 class TaskChangeHistorySerializer(serializers.ModelSerializer):
@@ -40,7 +39,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return super(UserRegisterSerializer, self).validate(data)
-
 
     class Meta:
         model = User
