@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 
 STATUSES = [('New', 'New'), ('Planned', 'Planned'), ('In progress', 'In progress'), ('Completed', 'Completed')]
@@ -8,7 +8,7 @@ STATUSES = [('New', 'New'), ('Planned', 'Planned'), ('In progress', 'In progress
 class Task(models.Model):
     task_name = models.CharField(max_length=150, verbose_name="Название")
     description = models.CharField(max_length=1000, verbose_name="Описание")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     creation_date = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     status = models.CharField(max_length=20, choices=STATUSES, verbose_name="Статус")
     completion_date = models.DateTimeField(null=True, blank=True, verbose_name="Дата завершения")
@@ -22,7 +22,7 @@ class Task(models.Model):
 
 class TaskChangeHistory(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     task_name = models.CharField(max_length=150, verbose_name="Название")
     description = models.CharField(max_length=1000, verbose_name="Описание")
     status = models.CharField(max_length=20, choices=STATUSES, verbose_name="Статус")
